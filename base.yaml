@@ -1,0 +1,66 @@
+variant: fcos
+version: 1.0.0
+
+passwd:
+  users:
+    - name: core
+      ssh_authorized_keys:
+        - "YOUR_KEY_HERE"
+
+storage:
+
+  files:
+    - path: "/etc/hostname"
+      contents:
+        source: "data:,nodeNODE_NUMBER"
+      mode: 0644
+    - path: "/usr/local/bin/k3s"
+      contents:
+        source: "https://github.com/rancher/k3s/releases/download/v1.0.0/k3s"
+        verification:
+          hash: sha512-bbea8cd86a5c660e646b002a013593d25d9c20bb1194f2d9bd4ecaa60eb9d43bda368e313c5f09df6c6d5d2602e3235bb366336c1a2fd57f3042f05ff09f3de4
+      mode: 0755
+      user:
+        name: root
+      group:
+        name: root
+    - path: "/usr/local/etc/k3s/token"
+      contents:
+        # uuidgen | base64 -w 0
+        source: "data:text/plain;charset=utf-8;base64,NWE5NzAzYzktOTcyOC00NjAyLWE0ZmYtNGRjY2Q0NDIwOGNkCg=="
+      mode: 0400
+      user:
+        name: root
+      group:
+        name: root
+
+systemd:
+  units:
+
+    - name: k3s.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Lightweight Kubernetes
+        Documentation=https://k3s.io
+        After=network-online.target
+
+        [Install]
+        WantedBy=multi-user.target
+
+        [Service]
+        Type=notify
+        KillMode=process
+        Delegate=yes
+        LimitNOFILE=infinity
+        LimitNPROC=infinity
+        LimitCORE=infinity
+        TasksMax=infinity
+        TimeoutStartSec=0
+        Restart=always
+        RestartSec=5s
+        ExecStartPre=-/sbin/modprobe br_netfilter
+        ExecStartPre=-/sbin/modprobe overlay
+        ExecStart=/usr/local/bin/k3s server \
+          --cluster-domain example.com \
+          --token-file /usr/local/etc/k3s/token
