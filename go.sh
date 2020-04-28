@@ -3,12 +3,13 @@
 set -e
 
 HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-SCRATCH="$HERE/scratch/"
+SCRATCH="$HERE/scratch"
 mkdir -p "$SCRATCH"
 cd "$HERE"
 
-if ! (( NUM_NODES="$(cat "$HERE/NUM_NODES")" )) || (( NUM_NODES < 1 )); then
-    echo "$HERE/NUM_NODES must contain a number >= 1" >&2
+[[ -z "$NUM_NODES" ]] && NUM_NODES=1
+if (( NUM_NODES < 1 )); then
+    echo "If set, env var NUM_NODES must contain a number >= 1" >&2
     exit 1
 fi
 
@@ -27,13 +28,39 @@ fi
 
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
 
-for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
-    IGN="$SCRATCH/node$NODE_NUMBER.ign"
-    sed < base.yaml \
+function makeign() {
+    local AUTH_ME="$1"
+    local NODE_NUMBER="$2"
+    local IGN="$3"
+    sed < "$HERE/base.yaml" \
         -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
         -e "s|NODE_NUMBER|$NODE_NUMBER|g" \
     | podman run -i --rm quay.io/coreos/fcct:release --pretty --strict \
         > "$IGN"
+}
+
+
+for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
+    IGN="$SCRATCH/node$NODE_NUMBER.ign"
+
+    RETRIES=6
+    ATTEMPT=1
+    SUCCEEDED=0
+    while ((ATTEMPT <= RETRIES)); do
+        if makeign "$AUTH_ME" "$NODE_NUMBER" "$IGN"; then
+            echo "Successfully created $IGN."
+            SUCCEEDED=1
+            break
+        else
+            echo "Failed to make ignition file on attempt $ATTEMPT/$RETRIES" >&2
+            sleep 1
+            ((ATTEMPT++)) || : # this technically exits unsuccesfully because bash.
+        fi
+    done
+    if [[ "$SUCCEEDED" != 1 ]]; then
+        echo "Couldn't make $IGN after $RETRIES attempts. Bailing." >&2
+        exit 1
+    fi
 
     NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
     if [[ -f "$NQ" ]]; then
