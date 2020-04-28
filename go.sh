@@ -12,7 +12,7 @@ QCOW="$SCRATCH/fedora-coreos-qemu.qcow2"
 if [[ ! -f "$QCOW" || "$(wc -c < "$QCOW")" -eq 0 ]]; then
     IMG_LOC="https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/31.20200407.3.0/x86_64/fedora-coreos-31.20200407.3.0-qemu.x86_64.qcow2.xz"
 
-    echo "Fetching and ecompressing image. This may take a minute..."
+    echo "Fetching and decompressing image. This may take a minute..."
     curl -sfL "$IMG_LOC" | xzcat > "$QCOW"
 else
     echo "Reusing $QCOW"
