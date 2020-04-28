@@ -7,6 +7,13 @@ SCRATCH="$HERE/scratch/"
 mkdir -p "$SCRATCH"
 cd "$HERE"
 
+if ! (( NUM_NODES="$(cat "$HERE/NUM_NODES")" )) || (( NUM_NODES < 1 )); then
+    echo "$HERE/NUM_NODES must contain a number >= 1" >&2
+    exit 1
+fi
+
+echo "Going to create $NUM_NODES node(s)..."
+
 QCOW="$SCRATCH/fedora-coreos-qemu.qcow2"
 
 if [[ ! -f "$QCOW" || "$(wc -c < "$QCOW")" -eq 0 ]]; then
@@ -19,7 +26,8 @@ else
 fi
 
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
-for NODE_NUMBER in 0; do
+
+for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     IGN="$SCRATCH/node$NODE_NUMBER.ign"
     sed < base.yaml \
         -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
