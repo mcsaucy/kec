@@ -35,7 +35,7 @@ function makeign() {
     sed < "$HERE/base.yaml" \
         -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
         -e "s|NODE_NUMBER|$NODE_NUMBER|g" \
-    | podman run -i --rm quay.io/coreos/fcct:release --pretty --strict \
+    | podman run -i quay.io/coreos/fcct:release --pretty --strict \
         > "$IGN"
 }
 
