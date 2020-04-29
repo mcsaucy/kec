@@ -27,25 +27,20 @@ else
 fi
 
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
-
-function makeign() {
-    local AUTH_ME="$1"
-    local NODE_NUMBER="$2"
-    local IGN="$3"
-    sed < "$HERE/base.yaml" \
-        -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
-        -e "s|NODE_NUMBER|$NODE_NUMBER|g" \
-    | podman run -i quay.io/coreos/fcct:release --pretty --strict \
-        > "$IGN"
-}
+K3S_TOKEN="$(uuidgen | base64 -w 0)"
 
 bash "$HERE/teardown.sh"
-
 
 for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
-    makeign "$AUTH_ME" "$NODE_NUMBER" "$IGN"
+    sed < "$HERE/base.yaml" \
+        -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
+        -e "s|K3S_TOKEN|$K3S_TOKEN|g" \
+        -e "s|NODE_NUMBER|$NODE_NUMBER|g" \
+    | podman run -i quay.io/coreos/fcct:release --pretty --strict \
+        > "$IGN"
+
     NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
     if [[ -f "$NQ" ]]; then
         rm -f "$NQ"

@@ -26,8 +26,7 @@ storage:
         name: root
     - path: "/usr/local/etc/k3s/token"
       contents:
-        # uuidgen | base64 -w 0
-        source: "data:text/plain;charset=utf-8;base64,NWE5NzAzYzktOTcyOC00NjAyLWE0ZmYtNGRjY2Q0NDIwOGNkCg=="
+        source: "data:text/plain;charset=utf-8;base64,K3S_TOKEN"
       mode: 0400
       user:
         name: root
