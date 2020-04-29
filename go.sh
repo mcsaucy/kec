@@ -43,25 +43,7 @@ function makeign() {
 for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
-    RETRIES=6
-    ATTEMPT=1
-    SUCCEEDED=0
-    while ((ATTEMPT <= RETRIES)); do
-        if makeign "$AUTH_ME" "$NODE_NUMBER" "$IGN"; then
-            echo "Successfully created $IGN."
-            SUCCEEDED=1
-            break
-        else
-            echo "Failed to make ignition file on attempt $ATTEMPT/$RETRIES" >&2
-            sleep 1
-            ((ATTEMPT++)) || : # this technically exits unsuccesfully because bash.
-        fi
-    done
-    if [[ "$SUCCEEDED" != 1 ]]; then
-        echo "Couldn't make $IGN after $RETRIES attempts. Bailing." >&2
-        exit 1
-    fi
-
+    makeign "$AUTH_ME" "$NODE_NUMBER" "$IGN"
     NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
     if [[ -f "$NQ" ]]; then
         rm -f "$NQ"
