@@ -50,7 +50,7 @@ function make_vm() {
     rm -f "$SCRATCH/disk.node$NODE_NUMBER.0" "$SCRATCH/disk.node$NODE_NUMBER.1"
     qemu-img create -f qcow2 -b "$QCOW" "$NQ"
 
-    local VM_NAME="issue_307_node$NODE_NUMBER"
+    local VM_NAME="issue_329_node$NODE_NUMBER"
 
     echo "Let's make $VM_NAME"
 
