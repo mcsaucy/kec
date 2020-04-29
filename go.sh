@@ -13,6 +13,8 @@ if (( NUM_NODES < 1 )); then
     exit 1
 fi
 
+bash "$HERE/teardown.sh"
+
 echo "Going to create $NUM_NODES node(s)..."
 
 QCOW="$SCRATCH/fedora-coreos-qemu.qcow2"
@@ -28,8 +30,6 @@ fi
 
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
 K3S_TOKEN="$(uuidgen | base64 -w 0)"
-
-bash "$HERE/teardown.sh"
 
 for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     IGN="$SCRATCH/node$NODE_NUMBER.ign"
