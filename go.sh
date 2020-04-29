@@ -39,6 +39,8 @@ function makeign() {
         > "$IGN"
 }
 
+bash "$HERE/teardown.sh"
+
 
 for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     IGN="$SCRATCH/node$NODE_NUMBER.ign"
@@ -52,12 +54,6 @@ for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     qemu-img create -f qcow2 -b "$QCOW" "$NQ"
 
     VM_NAME="issue_307_node$NODE_NUMBER"
-
-    echo "Cleaning up any running VMs that we may have started in the past."
-    echo "Don't worry about missing domain errors."
-    virsh --connect qemu:///system destroy "$VM_NAME" || :
-    virsh --connect qemu:///system undefine "$VM_NAME" || :
-    echo "OK, start worrying about missing domain errors again..."
 
     echo "Let's make $VM_NAME"
 
