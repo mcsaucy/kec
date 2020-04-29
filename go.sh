@@ -63,3 +63,5 @@ for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     echo "$VM_NAME is booting."
 
 done
+
+echo "Run ./node_ips.sh to discover which nodes have what IPs"
