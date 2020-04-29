@@ -31,8 +31,10 @@ fi
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
 K3S_TOKEN="$(uuidgen | base64 -w 0)"
 
-for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
-    IGN="$SCRATCH/node$NODE_NUMBER.ign"
+function make_vm() {
+    local NODE_NUMER="$1"
+
+    local IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
     sed < "$HERE/base.yaml" \
         -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
@@ -41,14 +43,14 @@ for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
     | podman run -i quay.io/coreos/fcct:release --pretty --strict \
         > "$IGN"
 
-    NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
+    local NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
     if [[ -f "$NQ" ]]; then
         rm -f "$NQ"
     fi
     rm -f "$SCRATCH/disk.node$NODE_NUMBER.0" "$SCRATCH/disk.node$NODE_NUMBER.1"
     qemu-img create -f qcow2 -b "$QCOW" "$NQ"
 
-    VM_NAME="issue_307_node$NODE_NUMBER"
+    local VM_NAME="issue_307_node$NODE_NUMBER"
 
     echo "Let's make $VM_NAME"
 
@@ -61,7 +63,10 @@ for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
         --qemu-commandline="-fw_cfg name=opt/com.coreos/config,file=$IGN"
 
     echo "$VM_NAME is booting."
+}
 
+for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
+    make_vm "$NODE_NUMBER"
 done
 
 echo "Run ./node_ips.sh to discover which nodes have what IPs"
