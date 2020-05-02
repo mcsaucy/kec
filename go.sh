@@ -7,7 +7,7 @@ SCRATCH="$HERE/scratch"
 mkdir -p "$SCRATCH"
 cd "$HERE"
 
-[[ -z "$NUM_NODES" ]] && NUM_NODES=1
+NUM_NODES="${NUM_NODES:=1}"
 if (( NUM_NODES < 1 )); then
     echo "If set, env var NUM_NODES must contain a number >= 1" >&2
     exit 1
