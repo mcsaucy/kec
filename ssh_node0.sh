@@ -16,4 +16,4 @@ if [[ -z "$IP" ]]; then
 fi
 
 echo "Preparing to ssh to core@$IP"
-ssh "core@$IP"
+ssh -oStrictHostKeyChecking=no "core@$IP" "$@"
