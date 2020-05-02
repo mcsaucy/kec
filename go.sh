@@ -104,10 +104,13 @@ function wait_til_sshable() {
     echo "Waiting for node$NODE_NUM to be SSHable..."
     retry_with_backoff timeout 3s "$HERE/ssh_node.sh" "$NODE_NUM" true
 }
-function wait_til_can_see_nodes() {
+function wait_til_can_see_node() {
     local NODE_NUM="$1"
+    local LOOK_FOR="${2}"
     echo "Waiting for node$NODE_NUM to be able to see nodes..."
-    retry_with_backoff timeout 3s "$HERE/ssh_node.sh" "$NODE_NUM" sudo k3s kubectl get node
+    retry_with_backoff timeout 3s \
+        "$HERE/ssh_node.sh" "$NODE_NUM" \
+        sudo k3s kubectl get node "node${LOOK_FOR:=0}" | grep -q "Ready"
 }
 
 # we have to make the primary before we can add agents.
@@ -127,5 +130,5 @@ done
 echo "Waiting for all secondary nodes to come alive..."
 
 for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
-    wait_til_sshable "$NODE_NUMBER"
+    wait_til_can_see_node 0 "$NODE_NUMBER"
 done
