@@ -32,7 +32,7 @@ AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
 K3S_TOKEN="$(uuidgen | base64 -w 0)"
 
 function make_vm() {
-    local NODE_NUMER="$1"
+    local NODE_NUMBER="$1"
 
     local IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
@@ -65,7 +65,35 @@ function make_vm() {
     echo "$VM_NAME is booting."
 }
 
-for NODE_NUMBER in $(seq 0 "$(( NUM_NODES - 1 ))"); do
+function retry_with_backoff() {
+    local CMD=( "$@" )
+    local ATTEMPT=1
+    local BACKOFFS=(1 5 5 10 15 20)
+    local MAX_ATT
+    (( MAX_ATT=${#BACKOFFS[@]} + 1))
+    for seconds in "${BACKOFFS[@]}"; do
+        echo "(attempt $ATTEMPT/$MAX_ATT) executing: $*"
+        if ! "${CMD[@]}"; then
+            echo "Failed. Sleeping $seconds seconds and retrying" >&2
+            ((ATTEMPT++))
+            sleep "$seconds"
+        else return 0
+        fi
+    done
+
+    echo "(attempt $ATTEMPT/$MAX_ATT) executing: $*"
+    "${CMD[@]}"
+}
+
+# we have to make the primary before we can add agents.
+make_vm 0
+echo
+echo "Waiting for node0 to come online..."
+echo
+retry_with_backoff timeout 3s "$HERE/ssh_node0.sh" true
+
+
+for NODE_NUMBER in $(seq 1 "$(( NUM_NODES - 1 ))"); do
     make_vm "$NODE_NUMBER"
 done
 
