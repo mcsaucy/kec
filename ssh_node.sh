@@ -2,7 +2,8 @@
 
 set -e
 
-if [[ "$#" -eq 0 ]]; then
+RE='^[0-9]+$'
+if [[ "$#" -eq 0 || ! "$1" =~ $RE ]]; then
     echo "Usage: $0 NODE_NUMBER [commands...]" >&2
     exit 1
 fi
