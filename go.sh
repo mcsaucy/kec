@@ -31,17 +31,31 @@ fi
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
 K3S_TOKEN="$(uuidgen | base64 -w 0)"
 
-function make_vm() {
+function make_ign() {
     local NODE_NUMBER="$1"
-
+    local PRIMARY_NODE_IP="$2"
     local IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
-    sed < "$HERE/base.yaml" \
-        -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
-        -e "s|K3S_TOKEN|$K3S_TOKEN|g" \
-        -e "s|NODE_NUMBER|$NODE_NUMBER|g" \
+    local SUBS=(
+        -e "s|YOUR_KEY_HERE|$AUTH_ME|g"
+        -e "s|K3S_TOKEN|$K3S_TOKEN|g"
+        -e "s|NODE_NUMBER|$NODE_NUMBER|g"
+    )
+
+    if [[ -n "$PRIMARY_NODE_IP" ]]; then
+        SUBS+=( -e "s|PRIMARY_NODE_IP|$PRIMARY_NODE_IP|g" )
+        local TMPL="$HERE/agent.yaml"
+    else
+        local TMPL="$HERE/server.yaml"
+    fi
+    sed < "$TMPL" "${SUBS[@]}" \
     | podman run -i quay.io/coreos/fcct:release --pretty --strict \
         > "$IGN"
+}
+
+function make_vm() {
+    local NODE_NUMBER="$1"
+    local IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
     local NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
     if [[ -f "$NQ" ]]; then
@@ -86,14 +100,21 @@ function retry_with_backoff() {
 }
 
 # we have to make the primary before we can add agents.
+make_ign 0
 make_vm 0
 echo
 echo "Waiting for node0 to come online..."
 echo
-retry_with_backoff timeout 3s "$HERE/ssh_node0.sh" true
+retry_with_backoff timeout 3s "$HERE/ssh_node0.sh" sudo k3s kubectl get node
+
+PRIMARY_NODE_IP="$( bash "$HERE/node_ips.sh" \
+                    | grep "issue_329_node0" \
+                    | cut -d, -f3 \
+                    | cut -d/ -f1 )"
 
 
 for NODE_NUMBER in $(seq 1 "$(( NUM_NODES - 1 ))"); do
+    make_ign "$NODE_NUMBER" "$PRIMARY_NODE_IP"
     make_vm "$NODE_NUMBER"
 done
 
