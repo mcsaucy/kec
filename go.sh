@@ -113,10 +113,17 @@ function wait_til_can_see_node() {
         sudo k3s kubectl get node "node${LOOK_FOR:=0}" | grep -q "Ready"
 }
 
+function node_kubectl() {
+    local NODE_NUM="$1"
+    shift
+    "$HERE/ssh_node.sh" "$NODE_NUM" sudo k3s kubectl "$@"
+}
+
 # we have to make the primary before we can add agents.
 make_ign 0
 make_vm 0
-wait_til_can_see_nodes 0
+wait_til_can_see_node 0
+node_kubectl 0 label node node0 kubernetes.io/role=master
 
 PRIMARY_NODE_IP="$( bash "$HERE/ip.sh" 0)"
 
@@ -131,4 +138,8 @@ echo "Waiting for all secondary nodes to come alive..."
 
 for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
     wait_til_can_see_node 0 "$NODE_NUMBER"
+    node_kubectl 0 label node "node${NODE_NUMBER}" kubernetes.io/role=node
+    node_kubectl 0 label node "node${NODE_NUMBER}" node-role.kubernetes.io/node=""
 done
+
+
