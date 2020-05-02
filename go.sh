@@ -107,10 +107,7 @@ echo "Waiting for node0 to come online..."
 echo
 retry_with_backoff timeout 3s "$HERE/ssh_node0.sh" sudo k3s kubectl get node
 
-PRIMARY_NODE_IP="$( bash "$HERE/node_ips.sh" \
-                    | grep "issue_329_node0" \
-                    | cut -d, -f3 \
-                    | cut -d/ -f1 )"
+PRIMARY_NODE_IP="$( bash "$HERE/ip.sh" 0)"
 
 
 for NODE_NUMBER in $(seq 1 "$(( NUM_NODES - 1 ))"); do
@@ -118,4 +115,4 @@ for NODE_NUMBER in $(seq 1 "$(( NUM_NODES - 1 ))"); do
     make_vm "$NODE_NUMBER"
 done
 
-echo "Run ./node_ips.sh to discover which nodes have what IPs"
+echo "Run ./ip.sh to discover which nodes have what IPs"
