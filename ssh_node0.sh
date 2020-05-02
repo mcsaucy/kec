@@ -2,14 +2,16 @@
 
 set -e
 
-mapfile OUR_VMS < <(virsh --connect qemu:///system list | grep issue_329_node0)
-DOMAIN_ID="$(echo "${OUR_VMS[0]}" | awk '{print $1}')"
-IP=$(virsh --connect qemu:///system domifaddr "$DOMAIN_ID" \
-    | grep "vnet" | awk '{print $4}' | cut -d/ -f1)
+HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+IP="$( bash "$HERE/node_ips.sh" \
+        | grep "issue_329_node0" \
+        | cut -d, -f3 \
+        | cut -d/ -f1 )"
 
 if [[ -z "$IP" ]]; then
-    echo "Can't determine IP of node 0. This could be because it's booting."
-    echo "Ensure it's running and try again later."
+    echo "Can't determine IP of node 0. This could be because it's booting." >&2
+    echo "Ensure it's running and try again later." >&2
     exit 1
 fi
 
