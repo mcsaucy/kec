@@ -28,6 +28,7 @@ else
     echo "Reusing $QCOW"
 fi
 
+# shellcheck disable=SC1117
 AUTH_ME="$(tr -d "\n" < "$HOME/.ssh/id_rsa.pub")"
 K3S_TOKEN="$(uuidgen | base64 -w 0)"
 
@@ -142,4 +143,11 @@ for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
     node_kubectl 0 label node "node${NODE_NUMBER}" node-role.kubernetes.io/node=""
 done
 
-
+echo "Setting up rook-ceph with examples."
+"$HERE/ssh_node.sh" 0 git clone --single-branch --branch release-1.3 https://github.com/rook/rook.git
+node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/common.yaml
+node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/operator.yaml
+node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/cluster.yaml
+sleep 3
+node_kubectl 0 -n rook-ceph get pods
+echo "Completed successfully in $SECONDS seconds."
