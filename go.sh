@@ -99,20 +99,33 @@ function retry_with_backoff() {
     "${CMD[@]}"
 }
 
+function wait_til_sshable() {
+    local NODE_NUM="$1"
+    echo "Waiting for node$NODE_NUM to be SSHable..."
+    retry_with_backoff timeout 3s "$HERE/ssh_node.sh" "$NODE_NUM" true
+}
+function wait_til_can_see_nodes() {
+    local NODE_NUM="$1"
+    echo "Waiting for node$NODE_NUM to be able to see nodes..."
+    retry_with_backoff timeout 3s "$HERE/ssh_node.sh" "$NODE_NUM" sudo k3s kubectl get node
+}
+
 # we have to make the primary before we can add agents.
 make_ign 0
 make_vm 0
-echo
-echo "Waiting for node0 to come online..."
-echo
-retry_with_backoff timeout 3s "$HERE/ssh_node.sh" 0 sudo k3s kubectl get node
+wait_til_can_see_nodes 0
 
 PRIMARY_NODE_IP="$( bash "$HERE/ip.sh" 0)"
 
+mapfile -t SECONDARY_NODE_NUMS < <(seq 1 "$(( NUM_NODES - 1 ))")
 
-for NODE_NUMBER in $(seq 1 "$(( NUM_NODES - 1 ))"); do
+for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
     make_ign "$NODE_NUMBER" "$PRIMARY_NODE_IP"
     make_vm "$NODE_NUMBER"
 done
 
-echo "Run ./ip.sh to discover which nodes have what IPs"
+echo "Waiting for all secondary nodes to come alive..."
+
+for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
+    wait_til_sshable "$NODE_NUMBER"
+done
