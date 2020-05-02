@@ -105,7 +105,7 @@ make_vm 0
 echo
 echo "Waiting for node0 to come online..."
 echo
-retry_with_backoff timeout 3s "$HERE/ssh_node0.sh" sudo k3s kubectl get node
+retry_with_backoff timeout 3s "$HERE/ssh_node.sh" 0 sudo k3s kubectl get node
 
 PRIMARY_NODE_IP="$( bash "$HERE/ip.sh" 0)"
 
