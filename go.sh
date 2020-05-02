@@ -73,8 +73,8 @@ function make_vm() {
         -r 2048 --vcpus=2 \
         --os-variant=generic  --import --graphics=none --noautoconsole \
         --disk size=10,backing_store="$NQ" \
-        --disk "size=5,path=$SCRATCH/disk.node$NODE_NUMBER.0" \
-        --disk "size=5,path=$SCRATCH/disk.node$NODE_NUMBER.1" \
+        --disk "size=10,path=$SCRATCH/disk.node$NODE_NUMBER.0" \
+        --disk "size=10,path=$SCRATCH/disk.node$NODE_NUMBER.1" \
         --qemu-commandline="-fw_cfg name=opt/com.coreos/config,file=$IGN"
 
     echo "$VM_NAME is booting."
