@@ -7,9 +7,9 @@ SCRATCH="$HERE/scratch"
 mkdir -p "$SCRATCH"
 cd "$HERE"
 
-NUM_NODES="${NUM_NODES:=1}"
-if (( NUM_NODES < 1 )); then
-    echo "If set, env var NUM_NODES must contain a number >= 1" >&2
+NUM_NODES="${NUM_NODES:=3}"
+if (( NUM_NODES < 3 )); then
+    echo "If set, env var NUM_NODES must contain a number >= 3" >&2
     exit 1
 fi
 
@@ -148,6 +148,8 @@ echo "Setting up rook-ceph with examples."
 node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/common.yaml
 node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/operator.yaml
 node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/cluster.yaml
+node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/filesystem.yaml
+node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/csi/cephfs/storageclass.yaml
 sleep 3
 node_kubectl 0 -n rook-ceph get pods
 echo "Completed successfully in $SECONDS seconds."
