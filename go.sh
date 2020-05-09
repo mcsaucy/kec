@@ -45,9 +45,9 @@ function make_ign() {
 
     if [[ -n "$PRIMARY_NODE_IP" ]]; then
         SUBS+=( -e "s|PRIMARY_NODE_IP|$PRIMARY_NODE_IP|g" )
-        local TMPL="$HERE/agent.yaml"
+        local TMPL="$HERE/secondary.yaml"
     else
-        local TMPL="$HERE/server.yaml"
+        local TMPL="$HERE/primary.yaml"
     fi
     sed < "$TMPL" "${SUBS[@]}" \
     | podman run -i quay.io/coreos/fcct:release --pretty --strict \
@@ -120,11 +120,12 @@ function node_kubectl() {
     "$HERE/ssh_node.sh" "$NODE_NUM" sudo k3s kubectl "$@"
 }
 
-# we have to make the primary before we can add agents.
+# we have to make the primary before we can add secondaries.
 make_ign 0
 make_vm 0
 wait_til_can_see_node 0
-node_kubectl 0 label node node0 kubernetes.io/role=master
+# TODO(mcsaucy): uncomment
+#node_kubectl 0 label node node0 kubernetes.io/role=master
 
 PRIMARY_NODE_IP="$( bash "$HERE/ip.sh" 0)"
 
@@ -139,17 +140,19 @@ echo "Waiting for all secondary nodes to come alive..."
 
 for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
     wait_til_can_see_node 0 "$NODE_NUMBER"
-    node_kubectl 0 label node "node${NODE_NUMBER}" kubernetes.io/role=node
-    node_kubectl 0 label node "node${NODE_NUMBER}" node-role.kubernetes.io/node=""
+    # TODO(mcsaucy): uncomment
+    #node_kubectl 0 label node "node${NODE_NUMBER}" kubernetes.io/role=node
+    #node_kubectl 0 label node "node${NODE_NUMBER}" node-role.kubernetes.io/node=""
 done
 
-echo "Setting up rook-ceph with examples."
-"$HERE/ssh_node.sh" 0 git clone https://github.com/mcsaucy/kwik-e-cluster.git
-node_kubectl 0 create -f kwik-e-cluster/rook/common.yaml
-node_kubectl 0 create -f kwik-e-cluster/rook/operator.yaml
-node_kubectl 0 create -f kwik-e-cluster/rook/cluster.yaml
-node_kubectl 0 create -f kwik-e-cluster/rook/filesystem.yaml
-node_kubectl 0 create -f kwik-e-cluster/rook/storageclass.yaml
-sleep 3
-node_kubectl 0 -n rook-ceph get pods
+# TODO(mcsaucy): uncomment when we're stable enough to mess with ceph again.
+#echo "Setting up rook-ceph with examples."
+#"$HERE/ssh_node.sh" 0 git clone https://github.com/mcsaucy/kwik-e-cluster.git
+#node_kubectl 0 create -f kwik-e-cluster/rook/common.yaml
+#node_kubectl 0 create -f kwik-e-cluster/rook/operator.yaml
+#node_kubectl 0 create -f kwik-e-cluster/rook/cluster.yaml
+#node_kubectl 0 create -f kwik-e-cluster/rook/filesystem.yaml
+#node_kubectl 0 create -f kwik-e-cluster/rook/storageclass.yaml
+#sleep 3
+#node_kubectl 0 -n rook-ceph get pods
 echo "Completed successfully in $SECONDS seconds."

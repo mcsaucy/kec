@@ -16,9 +16,9 @@ storage:
       mode: 0644
     - path: "/usr/local/bin/k3s"
       contents:
-        source: "https://github.com/rancher/k3s/releases/download/v1.0.0/k3s"
+        source: "https://github.com/rancher/k3s/releases/download/v1.18.2%2Bk3s1/k3s"
         verification:
-          hash: sha512-bbea8cd86a5c660e646b002a013593d25d9c20bb1194f2d9bd4ecaa60eb9d43bda368e313c5f09df6c6d5d2602e3235bb366336c1a2fd57f3042f05ff09f3de4
+          hash: sha512-cb3cae64cfc2a92c26bebfe4191d17fae77f4c115c9431675f433f8fabe2514183a6a8f5c7bd76092c0e8ec880849c3e6189e8944046f8354733ed650d001516
       mode: 0755
       user:
         name: root
@@ -60,6 +60,7 @@ systemd:
         RestartSec=5s
         ExecStartPre=-/sbin/modprobe br_netfilter
         ExecStartPre=-/sbin/modprobe overlay
-        ExecStart=/usr/local/bin/k3s agent \
-          --token-file /usr/local/etc/k3s/token \
-          --server "https://PRIMARY_NODE_IP:6443"
+        ExecStart=/usr/local/bin/k3s --debug server \
+          --cluster-init \
+          --cluster-domain example.com \
+          --token-file /usr/local/etc/k3s/token
