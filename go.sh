@@ -144,12 +144,12 @@ for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
 done
 
 echo "Setting up rook-ceph with examples."
-"$HERE/ssh_node.sh" 0 git clone --single-branch --branch release-1.3 https://github.com/rook/rook.git
-node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/common.yaml
-node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/operator.yaml
-node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/cluster.yaml
-node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/filesystem.yaml
-node_kubectl 0 create -f rook/cluster/examples/kubernetes/ceph/csi/cephfs/storageclass.yaml
+"$HERE/ssh_node.sh" 0 git clone https://github.com/mcsaucy/kwik-e-cluster.git
+node_kubectl 0 create -f kwik-e-cluster/ceph/common.yaml
+node_kubectl 0 create -f kwik-e-cluster/ceph/operator.yaml
+node_kubectl 0 create -f kwik-e-cluster/ceph/cluster.yaml
+node_kubectl 0 create -f kwik-e-cluster/ceph/filesystem.yaml
+node_kubectl 0 create -f kwik-e-cluster/ceph/csi/cephfs/storageclass.yaml
 sleep 3
 node_kubectl 0 -n rook-ceph get pods
 echo "Completed successfully in $SECONDS seconds."
