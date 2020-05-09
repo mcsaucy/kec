@@ -83,11 +83,11 @@ function make_vm() {
 function retry_with_backoff() {
     local CMD=( "$@" )
     local ATTEMPT=1
-    local BACKOFFS=(1 5 5 10 15 20)
+    local BACKOFFS=(1 5 5 10 15 15 20 20 30 30 45)
     local MAX_ATT
     (( MAX_ATT=${#BACKOFFS[@]} + 1))
     for seconds in "${BACKOFFS[@]}"; do
-        echo "(attempt $ATTEMPT/$MAX_ATT) executing: $*"
+        echo "(attempt $ATTEMPT/$MAX_ATT) executing: $*" >&2
         if ! "${CMD[@]}"; then
             echo "Failed. Sleeping $seconds seconds and retrying" >&2
             ((ATTEMPT++))
@@ -145,11 +145,11 @@ done
 
 echo "Setting up rook-ceph with examples."
 "$HERE/ssh_node.sh" 0 git clone https://github.com/mcsaucy/kwik-e-cluster.git
-node_kubectl 0 create -f kwik-e-cluster/ceph/common.yaml
-node_kubectl 0 create -f kwik-e-cluster/ceph/operator.yaml
-node_kubectl 0 create -f kwik-e-cluster/ceph/cluster.yaml
-node_kubectl 0 create -f kwik-e-cluster/ceph/filesystem.yaml
-node_kubectl 0 create -f kwik-e-cluster/ceph/csi/cephfs/storageclass.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/common.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/operator.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/cluster.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/filesystem.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/storageclass.yaml
 sleep 3
 node_kubectl 0 -n rook-ceph get pods
 echo "Completed successfully in $SECONDS seconds."
