@@ -4,7 +4,7 @@ NODE_NUM="$1"
 
 function getall() {
     mapfile OUR_VMS < <(virsh --connect qemu:///system list \
-                        | grep issue_329_node)
+                        | grep kwik-e-cluster_node)
     for VM in "${OUR_VMS[@]}"; do
         DOMAIN_ID="$(echo "$VM" | awk '{print $1}')"
         NAME="$(echo "$VM" | awk '{print $2}')"
@@ -17,7 +17,7 @@ function getall() {
 if [[ -z "$NODE_NUM" ]]; then
     getall
 else
-    TARGET="issue_329_node$NODE_NUM"
+    TARGET="kwik-e-cluster_node$NODE_NUM"
     mapfile RECORDS < <(getall)
     for r in "${RECORDS[@]}"; do
         NAME="$(cut -d, -f1 <<< "$r")"

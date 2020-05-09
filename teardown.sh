@@ -2,9 +2,9 @@
 
 set -e
 
-echo "Tearing down all issue_329_* nodes..."
+echo "Tearing down all kwik-e-cluster_* nodes..."
 if ! VMS=( $(virsh --connect qemu:///system list --name \
-             | grep issue_329_node) ); then
+             | grep kwik-e-cluster_node) ); then
     echo "Nothing to tear down."
     exit 0
 fi
