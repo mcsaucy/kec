@@ -131,8 +131,6 @@ make_ign 0
 make_vm 0
 wait_til_done_with_firstboot 0
 wait_til_can_see_node 0
-# TODO(mcsaucy): uncomment
-#node_kubectl 0 label node node0 kubernetes.io/role=master
 
 PRIMARY_NODE_IP="$( bash "$HERE/ip.sh" 0)"
 
@@ -148,19 +146,16 @@ echo "Waiting for all secondary nodes to come alive..."
 for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
     wait_til_done_with_firstboot "$NODE_NUMBER"
     wait_til_can_see_node 0 "$NODE_NUMBER"
-    # TODO(mcsaucy): uncomment
-    #node_kubectl 0 label node "node${NODE_NUMBER}" kubernetes.io/role=node
-    #node_kubectl 0 label node "node${NODE_NUMBER}" node-role.kubernetes.io/node=""
 done
 
-# TODO(mcsaucy): uncomment when we're stable enough to mess with ceph again.
-#echo "Setting up rook-ceph with examples."
-#"$HERE/ssh_node.sh" 0 git clone https://github.com/mcsaucy/kwik-e-cluster.git
-#node_kubectl 0 create -f kwik-e-cluster/rook/common.yaml
-#node_kubectl 0 create -f kwik-e-cluster/rook/operator.yaml
-#node_kubectl 0 create -f kwik-e-cluster/rook/cluster.yaml
-#node_kubectl 0 create -f kwik-e-cluster/rook/filesystem.yaml
-#node_kubectl 0 create -f kwik-e-cluster/rook/storageclass.yaml
-#sleep 3
-#node_kubectl 0 -n rook-ceph get pods
+echo "Setting up rook-ceph with examples."
+"$HERE/ssh_node.sh" 0 git clone https://github.com/mcsaucy/kwik-e-cluster.git
+node_kubectl 0 create -f kwik-e-cluster/rook/common.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/operator.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/cluster.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/filesystem.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/storageclass.yaml
+node_kubectl 0 create -f kwik-e-cluster/rook/toolbox.yaml
+sleep 3
+node_kubectl 0 -n rook-ceph get pods
 echo "Completed successfully in $SECONDS seconds."
