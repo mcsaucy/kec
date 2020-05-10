@@ -10,6 +10,12 @@ passwd:
 storage:
 
   files:
+      # TODO(mcsaucy): this is sad. Stop doing this.
+    - path: "/etc/selinux/config"
+      contents:
+          source: "data:,SELINUX=permissive%0aSELINUXTYPE=targeted"
+      mode: 0644
+      overwrite: true
     - path: "/etc/hostname"
       contents:
         source: "data:,nodeNODE_NUMBER"
