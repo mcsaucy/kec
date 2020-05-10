@@ -16,6 +16,11 @@ storage:
         inline: "SELINUX=permissive\nSELINUXTYPE=targeted"
       mode: 0644
       overwrite: true
+    - path: "/etc/zincati/config.d/51-rollout-wariness.toml"
+      contents:
+        inline: |
+          [identity]
+          rollout_wariness = 0.1
     - path: "/etc/hostname"
       contents:
         inline: "nodeNODE_NUMBER"
