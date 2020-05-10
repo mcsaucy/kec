@@ -13,12 +13,12 @@ storage:
       # TODO(mcsaucy): this is sad. Stop doing this.
     - path: "/etc/selinux/config"
       contents:
-          source: "data:,SELINUX=permissive%0aSELINUXTYPE=targeted"
+        inline: "SELINUX=permissive\nSELINUXTYPE=targeted"
       mode: 0644
       overwrite: true
     - path: "/etc/hostname"
       contents:
-        source: "data:,nodeNODE_NUMBER"
+        inline: "nodeNODE_NUMBER"
       mode: 0644
     - path: "/usr/local/bin/k3s"
       contents:
