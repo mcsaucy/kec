@@ -83,7 +83,7 @@ function make_vm() {
 function retry_with_backoff() {
     local CMD=( "$@" )
     local ATTEMPT=1
-    local BACKOFFS=(1 5 5 10 15 15 20 20 30 30 45)
+    local BACKOFFS=(1 5 5 10 15 15 20 20 30 30 45 60)
     local MAX_ATT
     (( MAX_ATT=${#BACKOFFS[@]} + 1))
     for seconds in "${BACKOFFS[@]}"; do
@@ -105,6 +105,12 @@ function wait_til_sshable() {
     echo "Waiting for node$NODE_NUM to be SSHable..."
     retry_with_backoff timeout 3s "$HERE/ssh_node.sh" "$NODE_NUM" true
 }
+function wait_til_done_with_firstboot(){
+    local NODE_NUM="$1"
+    echo "Waiting for node$NODE_NUM to finish its first boot..."
+    retry_with_backoff timeout 3s "$HERE/ssh_node.sh" "$NODE_NUM" \
+        ! grep -q "ignition.firstboot" /proc/cmdline
+}
 function wait_til_can_see_node() {
     local NODE_NUM="$1"
     local LOOK_FOR="${2}"
@@ -123,6 +129,7 @@ function node_kubectl() {
 # we have to make the primary before we can add secondaries.
 make_ign 0
 make_vm 0
+wait_til_done_with_firstboot 0
 wait_til_can_see_node 0
 # TODO(mcsaucy): uncomment
 #node_kubectl 0 label node node0 kubernetes.io/role=master
@@ -139,6 +146,7 @@ done
 echo "Waiting for all secondary nodes to come alive..."
 
 for NODE_NUMBER in "${SECONDARY_NODE_NUMS[@]}"; do
+    wait_til_done_with_firstboot "$NODE_NUMBER"
     wait_til_can_see_node 0 "$NODE_NUMBER"
     # TODO(mcsaucy): uncomment
     #node_kubectl 0 label node "node${NODE_NUMBER}" kubernetes.io/role=node

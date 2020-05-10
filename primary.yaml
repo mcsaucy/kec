@@ -64,6 +64,7 @@ systemd:
         TimeoutStartSec=0
         Restart=always
         RestartSec=5s
+        ExecStartPre=/bin/bash -c "! /usr/bin/grep -q ignition.firstboot /proc/cmdline"
         ExecStartPre=-/sbin/modprobe br_netfilter
         ExecStartPre=-/sbin/modprobe overlay
         ExecStart=/usr/local/bin/k3s --debug server \
