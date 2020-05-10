@@ -115,15 +115,16 @@ function wait_til_can_see_node() {
     local NODE_NUM="$1"
     local LOOK_FOR="${2}"
     echo "Waiting for node$NODE_NUM to be able to see nodes..."
-    retry_with_backoff timeout 3s \
-        "$HERE/ssh_node.sh" "$NODE_NUM" \
-        sudo k3s kubectl get node "node${LOOK_FOR:=0}" | grep -q "Ready"
+    retry_with_backoff timeout 3s bash -c "
+            TARGET='$NODE_NUM'
+            '$HERE/kubectl_node.sh' get node 'node${LOOK_FOR:-0}' \
+                | grep -q 'Ready'"
 }
 
 function node_kubectl() {
     local NODE_NUM="$1"
     shift
-    "$HERE/ssh_node.sh" "$NODE_NUM" sudo k3s kubectl "$@"
+    TARGET="$NODE_NUM" "$HERE/kubectl_node.sh" "$@"
 }
 
 # we have to make the primary before we can add secondaries.
