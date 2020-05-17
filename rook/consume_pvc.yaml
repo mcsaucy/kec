@@ -31,7 +31,7 @@ spec:
         ports:
         - containerPort: 8080
         volumeMounts:
-        - name: pvc
+        - name: pv
           mountPath: /shit
       volumes:
       - name: pv
