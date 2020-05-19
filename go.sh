@@ -158,6 +158,7 @@ node_kubectl 0 create -f kec/rook/filesystem.yaml
 node_kubectl 0 create -f kec/rook/storageclass.yaml
 node_kubectl 0 create -f kec/rook/toolbox.yaml
 node_kubectl 0 create -f kec/rook/pvc.yaml
+node_kubectl 0 create -f kec/rook/consume_pvc.yaml
 sleep 3
 node_kubectl 0 -n rook-ceph get pods
 echo "Completed successfully in $SECONDS seconds."
