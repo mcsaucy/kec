@@ -17,13 +17,13 @@ bash "$HERE/teardown.sh"
 
 echo "Going to create $NUM_NODES node(s)..."
 
-QCOW="$SCRATCH/fedora-coreos-qemu.qcow2"
+QCOW="$SCRATCH/flatcar-qemu.qcow2"
 
 if [[ ! -f "$QCOW" || "$(wc -c < "$QCOW")" -eq 0 ]]; then
-    IMG_LOC="https://builds.coreos.fedoraproject.org/prod/streams/stable/builds/32.20200629.3.0/x86_64/fedora-coreos-32.20200629.3.0-qemu.x86_64.qcow2.xz"
+    IMG_LOC="https://stable.release.flatcar-linux.net/amd64-usr/current/flatcar_production_qemu_image.img.bz2"
 
     echo "Fetching and decompressing image. This may take a minute..."
-    curl -sfL "$IMG_LOC" | xzcat > "$QCOW"
+    curl -sfL "$IMG_LOC" | bzcat > "$QCOW"
 else
     echo "Reusing $QCOW"
 fi
@@ -35,28 +35,29 @@ K3S_TOKEN="$(uuidgen | base64 -w 0)"
 function make_ign() {
     local NODE_NUMBER="$1"
     local PRIMARY_NODE_IP="$2"
-    local IGN="$SCRATCH/node$NODE_NUMBER.ign"
 
-    local SUBS=(
-        -e "s|YOUR_KEY_HERE|$AUTH_ME|g"
-        -e "s|K3S_TOKEN|$K3S_TOKEN|g"
-        -e "s|NODE_NUMBER|$NODE_NUMBER|g"
-    )
+    local NODE_IGN_DIR="$SCRATCH/node$NODE_NUMBER/"
+    mkdir -p "$NODE_IGN_DIR"
+
+    echo "$K3S_TOKEN" > "$NODE_IGN_DIR/k3s_token"
+    echo "node$NODE_NUMBER" > "$NODE_IGN_DIR/hostname"
 
     if [[ -n "$PRIMARY_NODE_IP" ]]; then
         SUBS+=( -e "s|PRIMARY_NODE_IP|$PRIMARY_NODE_IP|g" )
-        local TMPL="$HERE/secondary.yaml"
+        local YAML="$HERE/secondary.yaml"
     else
-        local TMPL="$HERE/primary.yaml"
+        local YAML="$HERE/primary.yaml"
     fi
-    sed < "$TMPL" "${SUBS[@]}" \
-    | podman run -i quay.io/coreos/fcct:release --pretty --strict \
-        > "$IGN"
+    sed -e "s|YOUR_KEY_HERE|$AUTH_ME|g" \
+        -e "s|PRIMARY_NODE_IP|$PRIMARY_NODE_IP|g" < "$YAML" \
+      | podman run -i -v "$NODE_IGN_DIR":/ign quay.io/coreos/ct:latest-dev \
+        --pretty --strict --files-dir="/ign" \
+        > "$NODE_IGN_DIR/node$NODE_NUMBER.ign"
 }
 
 function make_vm() {
     local NODE_NUMBER="$1"
-    local IGN="$SCRATCH/node$NODE_NUMBER.ign"
+    local IGN="$SCRATCH/node$NODE_NUMBER/node$NODE_NUMBER.ign"
 
     local NQ="$SCRATCH/fcos.node$NODE_NUMBER.qcow2"
     if [[ -f "$NQ" ]]; then
